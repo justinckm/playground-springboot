@@ -1,0 +1,14 @@
+version: '3'
+services:
+  mysql_playground:
+    image: mysql:5.7.12
+    container_name: mysql_playground
+    environment:
+      - MYSQL_USER=${MYSQL_USER:-user}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-pass}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-playground}
+    volumes:
+      - ./mysql_data:/var/lib/stp/mysql/data
+    ports:
+      - "6606:3306"

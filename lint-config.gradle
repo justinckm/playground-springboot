@@ -1,0 +1,45 @@
+configurations {
+    detekt
+    ktlint
+}
+
+dependencies {
+    // code lint
+    ktlint("com.pinterest:ktlint:0.35.0")
+    detekt("io.gitlab.arturbosch.detekt:detekt-cli:1.1.1")
+}
+
+// generate idea configs (execute this, ignore the error and restart your idea)
+task ktlintToIdea(type: JavaExec, group: "verification") {
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args = ["--apply-to-idea-project"]
+}
+
+// format your files
+task ktlintFormat(type: JavaExec, group: "formatting") {
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args = ["-F", "src/**/*.kt"]
+}
+
+task ktlint(type: JavaExec, group: "verification") {
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args = ["src/**/*.kt"]
+}
+
+task detekt(type: JavaExec, group: "verification") {
+    main = "io.gitlab.arturbosch.detekt.cli.Main"
+    classpath = configurations.detekt
+    def input = "$projectDir"
+    def config = "$projectDir/detekt.yml"
+    def excludes = ".*/build/.*,.*/resources/.*,.*/bin/.*"
+    args = ['--input', input, '--excludes', excludes, '--config', config, '--parallel']
+}
+
+task lint(group: "verification") {
+    dependsOn "detekt"
+    dependsOn "ktlint"
+}
+check.dependsOn lint
