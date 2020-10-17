@@ -69,3 +69,26 @@ CREATE TABLE child_info_adoptive
             ON DELETE NO ACTION
             ON UPDATE NO ACTION
 );
+
+INSERT INTO gpls_case (id, case_id, validation_code)
+VALUES(1, 'CASE-1', 'CODE-1');
+INSERT INTO gpls_case (id, case_id, validation_code)
+VALUES(2, 'CASE-2', 'CODE-2');
+INSERT INTO gpls_case (id, case_id, validation_code)
+VALUES(3, 'CASE-3', 'CODE-3');
+
+INSERT INTO child_info (id, case_ref_id, birth_type)
+VALUES(1, 1, 'N');
+INSERT INTO child_info (id, case_ref_id, birth_type)
+VALUES(2, 2, 'N');
+INSERT INTO child_info (id, case_ref_id, birth_type)
+VALUES(3, 3, 'A');
+
+INSERT INTO child_info_live_birth (id, nric, live_age)
+VALUES(1, 'T111', 11);
+INSERT INTO child_info_live_birth (id, nric, live_age)
+VALUES(2, 'T222', 22);
+
+INSERT INTO child_info_adoptive (id, nric, adopt_age)
+VALUES(3, 'T333', 33);
+

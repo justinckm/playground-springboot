@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @Entity
 @Table(name = "gpls_case")
-data class Case(
+data class GplsCase(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(columnDefinition = "INT UNSIGNED")
@@ -41,7 +41,7 @@ data class Case(
     var validationCode: String? = null,
 
     @JsonManagedReference
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "case", cascade = [CascadeType.ALL])
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "gplsCase", cascade = [CascadeType.ALL])
     var childInfo: ChildInfo? = null
 )
 
@@ -65,7 +65,7 @@ abstract class ChildInfo(
     @JsonBackReference
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "case_ref_id", referencedColumnName = "id", nullable = false)
-    open val case: Case?,
+    open val gplsCase: GplsCase?,
 
     @Column(columnDefinition = "ENUM")
     @Enumerated(EnumType.STRING)
@@ -76,7 +76,7 @@ abstract class ChildInfo(
 @Table(name = "child_info_live_birth")
 open class LiveBirthChildInfo(
     id: Long? = null,
-    case: Case?,
+    gplsCase: GplsCase?,
     birthType: BirthType?,
 
     @Column
@@ -87,7 +87,7 @@ open class LiveBirthChildInfo(
 
 ) : ChildInfo(
     id,
-    case,
+    gplsCase,
     birthType
 )
 
@@ -95,7 +95,7 @@ open class LiveBirthChildInfo(
 @Table(name = "child_info_adoptive")
 open class AdoptiveChildInfo(
     id: Long? = null,
-    case: Case?,
+    gplsCase: GplsCase?,
     birthType: BirthType?,
 
     @Column
@@ -105,60 +105,60 @@ open class AdoptiveChildInfo(
     open val adoptAge: Long? = null
 ) : ChildInfo(
     id,
-    case,
+    gplsCase,
     birthType
 )
 
 @Repository
-interface CaseRepository : JpaRepository<Case, Long>, JpaSpecificationExecutor<Case> {
+interface CaseRepository : JpaRepository<GplsCase, Long>, JpaSpecificationExecutor<GplsCase> {
     @Query(value =
     """
-        SELECT c FROM Case c
+        SELECT c FROM GplsCase c
         WHERE c.caseId = ?1
     """)
     fun testJpql_getByCaseId(
         caseId: String
-    ): MutableList<Case>
+    ): MutableList<GplsCase>
 
     @Query(value =
     """
-        SELECT c FROM Case c
+        SELECT c FROM GplsCase c
         JOIN TREAT (c.childInfo AS LiveBirthChildInfo) p
         WHERE p.nric = ?1
     """)
     fun testJpql_getByLiveChildNric(
         nric: String
-    ): MutableList<Case>
+    ): MutableList<GplsCase>
 
     @Query(value =
     """
-        SELECT c FROM Case c
+        SELECT c FROM GplsCase c
         JOIN TREAT (c.childInfo AS AdoptiveChildInfo) p
         WHERE p.nric = ?1
     """)
     fun testJpql_getByAdoptChildNric(
         nric: String
-    ): MutableList<Case>
+    ): MutableList<GplsCase>
 
     @Query(value =
     """
-        SELECT c FROM Case c
+        SELECT c FROM GplsCase c
         JOIN TREAT (c.childInfo AS LiveBirthChildInfo) p
         WHERE p.liveAge = ?1
     """)
     fun testJpql_getByLiveChildAge(
         age: Long
-    ): MutableList<Case>
+    ): MutableList<GplsCase>
 
     @Query(value =
     """
-        SELECT c FROM Case c
+        SELECT c FROM GplsCase c
         JOIN TREAT (c.childInfo AS AdoptiveChildInfo) p
         WHERE p.adoptAge = ?1
     """)
     fun testJpql_getByAdoptChildAge(
         age: Long
-    ): MutableList<Case>
+    ): MutableList<GplsCase>
 }
 
 @RestController
@@ -170,25 +170,25 @@ class CaseController(
 
     // http://localhost:8080/testgpls/create-live
     @GetMapping("create-live")
-    fun createLiveCase(): Case? {
+    fun createLiveCase(): GplsCase? {
         logger.info("controller create default live case")
-        val case = Case(1, "caseid-1", "LIVE")
+        val case = GplsCase(1, "caseid-1", "LIVE")
         case.childInfo = LiveBirthChildInfo(1, case, BirthType.N, "T1111111A", 11)
         return caseRepository.save(case)
     }
 
     // http://localhost:8080/testgpls/create-adopt
     @GetMapping("create-adopt")
-    fun createAdoptCase(): Case? {
+    fun createAdoptCase(): GplsCase? {
         logger.info("controller create default adopt case")
-        val case = Case(2, "caseid-2", "ADOPT")
+        val case = GplsCase(2, "caseid-2", "ADOPT")
         case.childInfo = AdoptiveChildInfo(2, case, BirthType.A, "T2222222B", 22)
         return caseRepository.save(case)
     }
 
     // http://localhost:8080/testgpls/getbycaseid/caseid-1
     @GetMapping("getbycaseid/{caseid}")
-    fun getByCaseId(@PathVariable("caseid") caseid: String): List<Case>? {
+    fun getByCaseId(@PathVariable("caseid") caseid: String): List<GplsCase>? {
         logger.info("controller JPQL get by caseId")
         // ok
         return caseRepository.testJpql_getByCaseId(caseid)
@@ -196,7 +196,7 @@ class CaseController(
 
     // http://localhost:8080/testgpls/getbylivenric/T1111111A
     @GetMapping("getbylivenric/{nric}")
-    fun getByLiveNric(@PathVariable("nric") nric: String): List<Case>? {
+    fun getByLiveNric(@PathVariable("nric") nric: String): List<GplsCase>? {
         logger.info("controller JPQL get by live nric")
         // FAIL!! no result
         return caseRepository.testJpql_getByLiveChildNric(nric)
@@ -204,7 +204,7 @@ class CaseController(
 
     // http://localhost:8080/testgpls/getbyadoptnric/T2222222B
     @GetMapping("getbyadoptnric/{nric}")
-    fun getByAdoptNric(@PathVariable("nric") nric: String): List<Case>? {
+    fun getByAdoptNric(@PathVariable("nric") nric: String): List<GplsCase>? {
         logger.info("controller JPQL get by adopt nric")
         // ok
         return caseRepository.testJpql_getByAdoptChildNric(nric)
@@ -212,7 +212,7 @@ class CaseController(
 
     // http://localhost:8080/testgpls/getbyliveage/11
     @GetMapping("getbyliveage/{age}")
-    fun getByLiveAge(@PathVariable("age") age: Long): List<Case>? {
+    fun getByLiveAge(@PathVariable("age") age: Long): List<GplsCase>? {
         logger.info("controller JPQL get by live age")
         // ok
         return caseRepository.testJpql_getByLiveChildAge(age)
@@ -220,7 +220,7 @@ class CaseController(
 
     // http://localhost:8080/testgpls/getbyadoptage/22
     @GetMapping("getbyadoptage/{age}")
-    fun getByAdoptAge(@PathVariable("age") age: Long): List<Case>? {
+    fun getByAdoptAge(@PathVariable("age") age: Long): List<GplsCase>? {
         logger.info("controller JPQL get by adopt age")
         // ok
         return caseRepository.testJpql_getByAdoptChildAge(age)
