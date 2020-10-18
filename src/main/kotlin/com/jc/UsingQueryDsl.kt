@@ -127,10 +127,21 @@ class QueryDslController(
         return caseRepositoryWithDsl.findAll(GplsCaseSearchPredicate.byCaseOrChildNricCantReach("CASE-1", "T333")).toList()
     }
 
-    // cannot reach inheritance table
+    // can reach inheritance table
     @GetMapping("t5")
     fun t5(): List<GplsCase> {
         logger.info("controller t5")
         return caseRepositoryWithDsl.findAll(GplsCaseSearchPredicate.byCaseOrChildNric("CASE-1", "T333")).toList()
+    }
+
+    // can reach inheritance table if use queryDslBuilder with joins
+    @GetMapping("t6")
+    fun t6(): List<GplsCase> {
+        logger.info("controller t6")
+        return caseRepositoryWithDsl.findAll(queryDslBuilder.createQuery<GplsCase>()
+            .from(qGplsCase)
+            .leftJoin(qLiveBirthChildInfo).on(qGplsCase.childInfo.id.eq(qLiveBirthChildInfo.id))
+            .leftJoin(qAdoptiveChildInfo).on(qGplsCase.childInfo.id.eq(qAdoptiveChildInfo.id))
+            .where(GplsCaseSearchPredicate.byCaseOrChildNricCantReach("CASE-1", "T333")))
     }
 }
